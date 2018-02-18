@@ -37,7 +37,7 @@ public class PgMigrator {
             + "Available at https://github.com/isapir/Migrate2Postgres";
 
     public final static String USAGE = "Usage: java <options> "
-            + PgMigrator.class.getSimpleName()
+            + PgMigrator.class.getCanonicalName()
             + " <command> [<config-file> [<output-file>]]\n"
             + "       where command can be:\n"
             + "            ddl - to create the schema objects\n"
