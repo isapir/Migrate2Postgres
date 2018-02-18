@@ -1,5 +1,5 @@
 
-set M2PG_CONF=Migrate2Postgres.conf
+set M2PG_CONF=MsSqlAWT2Postgres.conf
 
 set M2PG_COMMAND=DDL
 
