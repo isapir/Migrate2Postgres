@@ -28,17 +28,28 @@ import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 
 public class PgMigrator {
 
-    final static String usage = "Usage: java <options> "
+    public final static String DISCL = "Migrate2Postgres Copyright (C) 2018 Igal Sapir\n"
+            + "This program comes with ABSOLUTELY NO WARRANTY;\n"
+            + "This is free software, and you are welcome to redistribute it\n"
+            + "under certain conditions;\n"
+            + "See https://www.gnu.org/licenses/gpl-3.0.txt for details\n"
+            + "\n"
+            + "Available at https://github.com/isapir/Migrate2Postgres";
+
+    public final static String USAGE = "Usage: java <options> "
             + PgMigrator.class.getSimpleName()
             + " <command> [<config-file> [<output-file>]]\n"
             + "       where command can be:\n"
             + "            ddl - to create the schema objects\n"
-            + "            dml - to copy the data";
+            + "            dml - to copy the data\n";
+
 
     public static void main(String[] args) throws Exception {
 
+        System.out.println(DISCL + "\n");
+
         if (args.length == 0){
-            System.out.println(usage);
+            System.out.println(USAGE);
             System.exit(-1);
         }
 
@@ -72,7 +83,7 @@ public class PgMigrator {
             doDml(schema, outputFile);
         }
         else {
-            System.out.println(usage);
+            System.out.println(USAGE);
             System.exit(-1);
         }
     }
@@ -170,6 +181,8 @@ public class PgMigrator {
         return "/**\n"
             + "\tScripted by Migrate2Postgres on "
             + ZonedDateTime.now().format(RFC_1123_DATE_TIME)
+            + "\n\n\t"
+            + DISCL.replace("\n", "\n\t")
             + "\n**/\n\n";
     }
 
