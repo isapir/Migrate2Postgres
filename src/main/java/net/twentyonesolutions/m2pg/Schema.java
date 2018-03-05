@@ -264,6 +264,7 @@ public class Schema {
                             .append("\n");
 
                     hasErrors = true;
+                    break;  // exit the loop and stop processing. TODO: modify for other exception handling strategies
 //                    throw ex;
                 }
 
