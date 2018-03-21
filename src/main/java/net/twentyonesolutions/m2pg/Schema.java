@@ -155,16 +155,14 @@ public class Schema {
                             .append(".  Recommended:")
                             .append("\n");
 
-                    long recommendValue = longValue + 1;
-
                     double recommendFactor = 1_000.0;
 
-                    if (recommendValue > 1_000_000)
+                    if (longValue > 1_000_000)
                         recommendFactor = 10_000.0;
 
-                    recommendValue = (long) (Math.ceil(recommendValue / recommendFactor) * recommendFactor);
+                    long recommendValue = (long) (Math.ceil((longValue + recommendFactor) / recommendFactor) * recommendFactor);
 
-                            log.append("     ALTER TABLE ")
+                    log.append("     ALTER TABLE ")
                             .append(tgtTable)
                             .append(" ALTER COLUMN ")
                             .append(config.getTargetColumnName(identity.name))
