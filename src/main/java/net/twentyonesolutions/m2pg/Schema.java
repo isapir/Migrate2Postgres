@@ -98,6 +98,26 @@ public class Schema {
     }
 
 
+    public void executeQueries(List<String> queries) throws SQLException {
+
+        Config config = this.config;
+
+        long tc = System.currentTimeMillis();
+
+        Statement statTgt = null;
+
+        Connection conTgt = config.connect(config.target);
+
+        statTgt = conTgt.createStatement();
+        statTgt.execute("BEGIN TRANSACTION;");
+
+        for (String sql : queries)
+            statTgt.execute(sql);
+
+        statTgt.execute("COMMIT;");
+    }
+
+
     public String copyTable(String tableName, IProgress progress) {
 
         StringBuilder log = new StringBuilder(1024);
@@ -246,7 +266,8 @@ public class Schema {
 
                     int executeResult = statInsert.executeUpdate();
                     copied += executeResult;
-                } catch (SQLException ex) {
+                }
+                catch (SQLException ex) {
 
                     String failedSql = statInsert.toString().replace("\n", "\n\t") + ";";
 

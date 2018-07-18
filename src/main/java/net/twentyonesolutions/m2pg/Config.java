@@ -83,15 +83,26 @@ public class Config {
             throw new IllegalArgumentException("DML section is not found in config (did you forget to use a template?)");
 
         String[] keys = new String[]{
-             "on_error"
+             "execute.before_all"
+            ,"execute.after_all"
+            ,"on_error"
             ,"select"
             ,"source_column_quote_prefix"
             ,"source_column_quote_suffix"
             ,"threads"
         };
 
+        // populate result with config value or default of empty string
         for (String k : keys){
             result.put(k, config.getOrDefault(prefix + k, ""));
+        }
+
+        // wrap single item String in List
+        for (String k : new String[]{ "execute.before_all", "execute.after_all" }){
+            Object v = result.get(k);
+            if (v instanceof String){
+                result.put(k, new ArrayList<String>(){{ add((String)v); }});
+            }
         }
 
         mapSrc = (Map)config.get(prefix + "jdbc_type_mapping");

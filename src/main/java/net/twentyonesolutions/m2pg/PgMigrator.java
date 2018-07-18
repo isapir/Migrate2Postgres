@@ -1,11 +1,14 @@
 package net.twentyonesolutions.m2pg;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -99,7 +102,7 @@ public class PgMigrator {
     }
 
 
-    public static void doDml(Schema schema, String filename) throws IOException {
+    public static void doDml(Schema schema, String filename) throws IOException, SQLException {
         IProgress progress = new ProgressOneline(schema);
 
         long tc = System.currentTimeMillis();
@@ -145,15 +148,34 @@ public class PgMigrator {
         }
 
         Path path = Paths.get(filename);
+        log(path, getBanner());
 
-        Files.write(path, Collections.singleton(getBanner()), StandardCharsets.UTF_8, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+        List<String> queries = null;
+        String logentry;
+
+        queries = (List<String>)schema.config.dml.getOrDefault("execute.before_all", Collections.EMPTY_LIST);
+        if (!queries.isEmpty()){
+
+            logentry = "-- executing queries execute.before_all";
+            System.out.println("\n" + logentry);
+            log(path, logentry);
+
+            try {
+                schema.executeQueries(queries);
+            }
+            catch (SQLException e) {
+                e.printStackTrace();
+                log(path, e);
+                throw (e);
+            }
+        }
 
         tasks
             .parallelStream()
             .forEach(task -> {
                 try {
                     String entry = task.get() + "\n\n";
-                    Files.write(path, Collections.singleton(entry), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+                    log(path, entry);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (ExecutionException e) {
@@ -165,14 +187,44 @@ public class PgMigrator {
 
         executorService.shutdown();
 
+        queries = (List<String>)schema.config.dml.getOrDefault("execute.after_all", Collections.EMPTY_LIST);
+        if (!queries.isEmpty()){
+
+            logentry = "-- executing queries execute.after_all";
+            System.out.println("\n" + logentry);
+            log(path, logentry);
+
+            try {
+                schema.executeQueries(queries);
+            }
+            catch (SQLException e) {
+                e.printStackTrace();
+                log(path, e);
+                throw (e);
+            }
+        }
+
         tc = System.currentTimeMillis() - tc;
 
-        String logentry = String.format("-- %tT Completed in %.3f seconds\n", System.currentTimeMillis(), tc / 1000.0);
-
-        Files.write(path, Collections.singleton(logentry), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+        logentry = String.format("-- %tT Completed in %.3f seconds\n", System.currentTimeMillis(), tc / 1000.0);
+        log(path, logentry);
 
         System.out.println("\n" + logentry);
         System.out.println("See log and recommended actions at " + path);
+    }
+
+
+    static void log(Path path, String logentry) throws IOException {
+
+        Files.write(path, Collections.singleton(logentry), StandardCharsets.UTF_8, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+    }
+
+
+    static void log(Path path, Exception ex) throws IOException {
+
+        StringWriter logentry = new StringWriter();
+        ex.printStackTrace(new PrintWriter(logentry));
+        log(path, logentry.toString());
     }
 
 
