@@ -5,11 +5,23 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public class Util {
 
@@ -196,4 +208,88 @@ public class Util {
         return curr;
     }
 
+
+    public static String getStackTraceAsString(Exception ex) {
+        return Arrays.stream(ex.getStackTrace())
+                .map(StackTraceElement::toString)
+                .collect(Collectors.joining("\n"));
+    }
+
+
+    /**
+     * Executes the queries in a transaction.
+     *
+     * @param queries - either SQL code or a file path that ends with .sql
+     * @param log - a StringBuilder that
+     * @param conTgt - a connection to the target server
+     * @return - true if all the queries were executed successfully
+     */
+    public static boolean executeQueries(List<String> queries, StringBuilder log, Connection conTgt) {
+
+        String logentry;
+
+        long tc = System.currentTimeMillis();
+
+        try {
+
+            Statement statTgt = null;
+
+            statTgt = conTgt.createStatement();
+            statTgt.execute("BEGIN TRANSACTION;");
+
+            for (String script : queries) {
+
+                logentry = "\n -- Executing: " + script + "\n";
+                System.out.println(logentry);
+                log.append(logentry);
+
+                String sql = script.trim();
+                if (sql.toLowerCase().endsWith(".sql")) {
+                    Path path = Paths.get(sql);
+                    sql = Files.lines(path)
+                            .collect(Collectors.joining());
+
+                    logentry = "\n/**\n" + sql + "\n*/\n";
+                    System.out.println(logentry);
+                    log.append(logentry);
+                }
+
+                statTgt.execute(sql);
+            }
+
+            statTgt.execute("COMMIT;");
+
+            tc = System.currentTimeMillis() - tc;
+            logentry = String.format(" /* executed %,d %s in %.3f seconds **/\n", queries.size(), queries.size() > 1 ? "queries" : "query", tc / 1000.0);
+            System.out.println(logentry);
+            log.append(logentry);
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+            log.append(getStackTraceAsString(ex));
+            return false;
+        }
+
+        return true;
+    }
+
+
+    public static boolean executeQueries(List<String> queries, StringBuilder log, Config config) {
+
+        try {
+
+            return executeQueries(queries, log, config.connect(config.target));
+        }
+        catch (SQLException ex){
+            ex.printStackTrace();
+            log.append(getStackTraceAsString(ex));
+            return false;
+        }
+    }
+
+
+    public static void log(Path path, String logentry) throws IOException {
+
+        Files.write(path, Collections.singleton(logentry), StandardCharsets.UTF_8, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+    }
 }

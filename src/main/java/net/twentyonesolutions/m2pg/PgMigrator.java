@@ -5,14 +5,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -25,13 +23,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 
 public class PgMigrator {
 
-    public final static String DISCL = "Migrate2Postgres Copyright (C) 2018 Igal Sapir\n"
+    public final static String DISCL = getProductName() + " Copyright (C) 2018 Igal Sapir\n"
             + "This program comes with ABSOLUTELY NO WARRANTY;\n"
             + "This is free software, and you are welcome to redistribute it\n"
             + "under certain conditions;\n"
@@ -107,6 +104,33 @@ public class PgMigrator {
 
         long tc = System.currentTimeMillis();
 
+        List<String> queries = null;
+        String logentry;
+        boolean completed = false;
+        Path path = Paths.get(filename);
+        Util.log(path, getBanner());
+
+        queries = (List<String>)schema.config.dml.getOrDefault("execute.before_all", Collections.EMPTY_LIST);
+        if (!queries.isEmpty()){
+
+            logentry = "-- executing queries execute.before_all";
+            System.out.println("\n" + logentry);
+            Util.log(path, logentry);
+
+            StringBuilder log = new StringBuilder(1024);
+            completed = Util.executeQueries(queries, log, schema.config);
+            Util.log(path, log.toString());
+
+            if (!completed){
+                Util.log(path, "!!!ABORTING!!!");
+                System.exit(1);
+            }
+
+            logentry = "-- completed queries execute.before_all";
+            System.out.println("\n" + logentry);
+            Util.log(path, logentry);
+        }
+
         int numThreads = 1;
 
         Object arg = schema.config.dml.get("threads");
@@ -147,37 +171,12 @@ public class PgMigrator {
             executorService.execute(task);
         }
 
-        Path path = Paths.get(filename);
-        log(path, getBanner());
-
-        List<String> queries = null;
-        String logentry;
-
-        queries = (List<String>)schema.config.dml.getOrDefault("execute.before_all", Collections.EMPTY_LIST);
-        if (!queries.isEmpty()){
-
-            logentry = "-- executing queries execute.before_all";
-            System.out.println("\n" + logentry);
-            log(path, logentry);
-
-            try {
-                StringBuilder log = new StringBuilder(1024);
-                schema.executeQueries(queries, log, null);
-                log(path, log);
-            }
-            catch (SQLException e) {
-                e.printStackTrace();
-                log(path, e);
-                throw (e);
-            }
-        }
-
         tasks
             .parallelStream()
             .forEach(task -> {
                 try {
                     String entry = task.get() + "\n\n";
-                    log(path, entry);
+                    Util.log(path, entry);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (ExecutionException e) {
@@ -194,50 +193,51 @@ public class PgMigrator {
 
             logentry = "-- executing queries execute.after_all";
             System.out.println("\n" + logentry);
-            log(path, logentry);
+            Util.log(path, logentry);
 
-            try {
-                StringBuilder log = new StringBuilder(1024);
-                schema.executeQueries(queries, log, null);
-                log(path, log);
-            }
-            catch (SQLException e) {
-                e.printStackTrace();
-                log(path, e);
-                throw (e);
+            StringBuilder log = new StringBuilder(1024);
+            completed = Util.executeQueries(queries, log, schema.config);
+            Util.log(path, log.toString());
+            if (!completed){
+                Util.log(path, "!!!ABORTING!!!");
+                System.exit(1);
             }
         }
 
         tc = System.currentTimeMillis() - tc;
 
         logentry = String.format("-- %tT Completed in %.3f seconds\n", System.currentTimeMillis(), tc / 1000.0);
-        log(path, logentry);
+        Util.log(path, logentry);
 
         System.out.println("\n" + logentry);
         System.out.println("See log and recommended actions at " + path);
     }
 
 
-    static void log(Path path, CharSequence logentry) throws IOException {
+    public static String getProductName() {
 
-        Files.write(path, Collections.singleton(logentry), StandardCharsets.UTF_8, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+        String result = PgMigrator.class.getPackage().getImplementationTitle();
+
+        return result != null ? result : "Migrate2Postgres";
     }
 
 
-    static void log(Path path, Exception ex) throws IOException {
+    public static String getProductVersion() {
 
-        String logentry = Arrays.stream(ex.getStackTrace())
-                .map(StackTraceElement::toString)
-                .collect(Collectors.joining("\n"));
+        String result = PgMigrator.class.getPackage().getImplementationVersion();
 
-        log(path, logentry);
+        return result != null ? result : "";
     }
 
 
     public static String getBanner(){
 
         return "/**\n"
-            + "\tScripted by Migrate2Postgres on "
+            + "\tScripted by "
+            + getProductName()
+            + " "
+            + getProductVersion()
+            + " on "
             + ZonedDateTime.now().format(RFC_1123_DATE_TIME)
             + "\n\n\t"
             + DISCL.replace("\n", "\n\t")

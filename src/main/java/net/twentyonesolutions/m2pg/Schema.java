@@ -1,9 +1,6 @@
 package net.twentyonesolutions.m2pg;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.JDBCType;
 import java.sql.PreparedStatement;
@@ -100,45 +97,6 @@ public class Schema {
             if (isIdentity)
                 table.setIdentity(col);
         }
-    }
-
-
-    public void executeQueries(List<String> queries, StringBuilder log, Connection conTgt) throws IOException, SQLException {
-
-        Config config = this.config;
-
-        long tc = System.currentTimeMillis();
-
-        Statement statTgt = null;
-
-        if (conTgt == null)
-            conTgt = config.connect(config.target);
-
-        statTgt = conTgt.createStatement();
-        statTgt.execute("BEGIN TRANSACTION;");
-
-        for (String script : queries){
-
-            String logentry = "\n -- Executing: " + script + "\n";
-
-            System.out.println(logentry);
-            log.append(logentry);
-
-            String sql = script.trim();
-            if (sql.toLowerCase().endsWith(".sql")){
-                Path path = Paths.get(sql);
-                sql = Files.lines(path)
-                        .collect(Collectors.joining());
-
-                logentry = "\n/**\n" + sql + "\n*/\n";
-                System.out.println(logentry);
-                log.append(logentry);
-            }
-
-            statTgt.execute(sql);
-        }
-
-        statTgt.execute("COMMIT;");
     }
 
 
@@ -307,7 +265,7 @@ public class Schema {
                                 .append(". ");
 
                         if (config.dml.get("execute.recommended").toString().toLowerCase().equals("all")){
-                            executeQueries(Arrays.asList(sqlRecommended), log, conTgt);
+                            Util.executeQueries(Arrays.asList(sqlRecommended), log, conTgt);
                         }
                         else {
                             log.append("Recommended:\n\t")
@@ -346,9 +304,8 @@ public class Schema {
 
         tc = System.currentTimeMillis() - tc;
 
-//        System.out.printf("\n%tT Copied table %s %,d/%,d in %.3f seconds\n", System.currentTimeMillis(), tableName, copied, rowCount, tc / 1000.0);
-
-        log.append(String.format(" /* copied %,d/%,d records in %.3f seconds **/\n", copied, rowCount, tc / 1000.0));
+        if (rowCount > 0)
+            log.append(String.format(" /* copied %,d / %,d records in %.3f seconds **/\n", copied, rowCount, tc / 1000.0));
 
         return log.toString();
     }
