@@ -1,8 +1,6 @@
 package net.twentyonesolutions.m2pg;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -163,7 +161,9 @@ public class PgMigrator {
             log(path, logentry);
 
             try {
-                schema.executeQueries(queries);
+                StringBuilder log = new StringBuilder(1024);
+                schema.executeQueries(queries, log, null);
+                log(path, log);
             }
             catch (SQLException e) {
                 e.printStackTrace();
@@ -197,7 +197,9 @@ public class PgMigrator {
             log(path, logentry);
 
             try {
-                schema.executeQueries(queries);
+                StringBuilder log = new StringBuilder(1024);
+                schema.executeQueries(queries, log, null);
+                log(path, log);
             }
             catch (SQLException e) {
                 e.printStackTrace();
@@ -216,7 +218,7 @@ public class PgMigrator {
     }
 
 
-    static void log(Path path, String logentry) throws IOException {
+    static void log(Path path, CharSequence logentry) throws IOException {
 
         Files.write(path, Collections.singleton(logentry), StandardCharsets.UTF_8, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
     }

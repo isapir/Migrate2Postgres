@@ -83,8 +83,9 @@ public class Config {
             throw new IllegalArgumentException("DML section is not found in config (did you forget to use a template?)");
 
         String[] keys = new String[]{
-             "execute.before_all"
-            ,"execute.after_all"
+             "execute.after_all"
+            ,"execute.before_all"
+            ,"execute.recommended"
             ,"on_error"
             ,"select"
             ,"source_column_quote_prefix"

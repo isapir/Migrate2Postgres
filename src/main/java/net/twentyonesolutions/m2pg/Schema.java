@@ -1,5 +1,9 @@
 package net.twentyonesolutions.m2pg;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.JDBCType;
 import java.sql.PreparedStatement;
@@ -7,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -98,7 +103,7 @@ public class Schema {
     }
 
 
-    public void executeQueries(List<String> queries) throws SQLException {
+    public void executeQueries(List<String> queries, StringBuilder log, Connection conTgt) throws IOException, SQLException {
 
         Config config = this.config;
 
@@ -106,19 +111,38 @@ public class Schema {
 
         Statement statTgt = null;
 
-        Connection conTgt = config.connect(config.target);
+        if (conTgt == null)
+            conTgt = config.connect(config.target);
 
         statTgt = conTgt.createStatement();
         statTgt.execute("BEGIN TRANSACTION;");
 
-        for (String sql : queries)
+        for (String script : queries){
+
+            String logentry = "\n -- Executing: " + script + "\n";
+
+            System.out.println(logentry);
+            log.append(logentry);
+
+            String sql = script.trim();
+            if (sql.toLowerCase().endsWith(".sql")){
+                Path path = Paths.get(sql);
+                sql = Files.lines(path)
+                        .collect(Collectors.joining());
+
+                logentry = "\n/**\n" + sql + "\n*/\n";
+                System.out.println(logentry);
+                log.append(logentry);
+            }
+
             statTgt.execute(sql);
+        }
 
         statTgt.execute("COMMIT;");
     }
 
 
-    public String copyTable(String tableName, IProgress progress) {
+    public String copyTable(String tableName, IProgress progress) throws IOException {
 
         StringBuilder log = new StringBuilder(1024);
 
@@ -159,41 +183,6 @@ public class Schema {
                 throw new RuntimeException("No results found for " + qSelect);
             }
 
-            if (table.hasIdentity()) {
-
-                Column identity = table.getIdentity();
-                qSelect = "SELECT MAX(" + identity.name + ") AS max_value" + "\nFROM " + table.toString();
-                rs = statSrc.executeQuery(qSelect);
-                if (rs.next()) {
-
-                    longValue = rs.getLong("max_value");
-
-                    log.append(" -- Identity column ")
-                            .append(identity.name)
-                            .append(" has max value of ")
-                            .append(longValue)
-                            .append(".  Recommended:")
-                            .append("\n");
-
-                    double recommendFactor = 1_000.0;
-
-                    if (longValue > 1_000_000)
-                        recommendFactor = 10_000.0;
-
-                    long recommendValue = (long) (Math.ceil((longValue + recommendFactor) / recommendFactor) * recommendFactor);
-
-                    log.append("     ALTER TABLE ")
-                            .append(tgtTable)
-                            .append(" ALTER COLUMN ")
-                            .append(config.getTargetColumnName(identity.name))
-                            .append(" RESTART WITH ")
-                            .append(recommendValue)
-                            .append(";\n");
-                } else {
-                    throw new RuntimeException("No results found for " + qSelect);
-                }
-            }
-
             qSelect = "SELECT " + table.getColumnListSrc(config) + "\nFROM " + table.toString();
 
             qInsert = "INSERT INTO " + tgtTable + " (" + table.getColumnListTgt(config) + ")";
@@ -206,7 +195,6 @@ public class Schema {
 
             PreparedStatement statInsert = conTgt.prepareStatement(qInsert);
 
-            //        statSrc.setAutoCommit(false);
             statSrc.setFetchSize(1000);
 
             rs = statSrc.executeQuery(qSelect);
@@ -234,18 +222,8 @@ public class Schema {
                     String tgtTypeName = jdbcTypeMapping.get(srcTypeName);
                     tgtType = JDBCType.valueOf(tgtTypeName).getVendorTypeNumber();
                 }
+
                 columnTypes[i - 1] = tgtType;
-
-                /*
-                SQLType sqlType = JDBCType.valueOf(srcType);
-                String srcTypeName = sqlType.getName();
-
-                if (jdbcTypeMapping.containsKey(srcTypeName)){
-                    String tgtTypeName = jdbcTypeMapping.get(srcTypeName);
-                    sqlType = JDBCType.valueOf(tgtTypeName);
-                }
-                sqlTypes[i - 1] = sqlType;
-                //*/
             }
 
             boolean hasErrors = false;
@@ -293,8 +271,53 @@ public class Schema {
                 //            System.out.printf("\r%tT %,d/%,d %.2f%% %8s %s", System.currentTimeMillis(), row, rowCount, 100.0 * row / rowCount, executeResult, table.toString());
             }
 
-            if (rowCount == 0 && progress != null)   // report progress in case if the table was empty
-                progress.progress(new IProgress.Status(tableName, 0, 0));
+            if (rowCount == 0){
+                if (progress != null)   // report progress in case the table was empty
+                    progress.progress(new IProgress.Status(tableName, 0, 0));
+            }
+            else {
+                if (table.hasIdentity()) {
+
+                    Column identity = table.getIdentity();
+                    qSelect = "SELECT MAX(" + identity.name + ") AS max_value" + "\nFROM " + table.toString();
+                    rs = statSrc.executeQuery(qSelect);
+                    if (rs.next()) {
+
+                        longValue = rs.getLong("max_value");
+
+                        double recommendFactor = 1_000.0;
+
+                        if (longValue > 1_000_000)
+                            recommendFactor = 10_000.0;
+
+                        long recommendValue = (long) (Math.ceil((longValue + recommendFactor) / recommendFactor) * recommendFactor);
+
+                        String sqlRecommended = "ALTER TABLE " +
+                                tgtTable +
+                                " ALTER COLUMN " +
+                                config.getTargetColumnName(identity.name) +
+                                " RESTART WITH " +
+                                recommendValue +
+                                ";";
+
+                        log.append(" -- Identity column ")
+                                .append(identity.name)
+                                .append(" has max value of ")
+                                .append(longValue)
+                                .append(". ");
+
+                        if (config.dml.get("execute.recommended").toString().toLowerCase().equals("all")){
+                            executeQueries(Arrays.asList(sqlRecommended), log, conTgt);
+                        }
+                        else {
+                            log.append("Recommended:\n\t")
+                                    .append(sqlRecommended);
+                        }
+                    } else {
+                        throw new RuntimeException("No results found for " + qSelect);
+                    }
+                }
+            }
 
             if (hasErrors) {
 
