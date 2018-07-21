@@ -8,15 +8,21 @@ Currently the project ships with a [template for SQL Server](src/main/resources/
 # Usage: 
 
     java <options> net.twentyonesolutions.m2pg.PgMigrator <command> [<config-file> [<output-file>]]
-    
-where `command` can be:
 
- - `ddl` - to create the schema objects
- - `dml` - to copy the data
-            
+  `<options>`:
+--
+The JVM (Java) options, like `classpath` and memory settings if needed
+
+  `<command>`:
+--
+ - `DDL` - Generate a script that will create the schema objects with the mapped data types, name transformations, identity columns, etc.  You should review the script prior to executing it with your preferred SQL client.
+ 
+ - `DML` - Copy the data from the source database to the target Postgres database in the schema created in the `DDL` step.
+
+
 # Requirements:
 
- - Java 1.8
+ - Java Runtime Environment (JRE) 1.8 or later
  - JDBC Drivers for the DBMSs used
  
 # Watch tutorial video:
