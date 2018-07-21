@@ -13,22 +13,27 @@ Currently the project ships with a [template for SQL Server](src/main/resources/
 
 Create a config file
 --
-The config file includes all of the information needed for the migration.  Such information includes the connection details for the source and target databases, mappings of SQL types for the DDL phase (e.g. SQL Server's `NVARCHAR` to Postgres' `TEXT`), mappings of JDBC types for the DML phase, name transformations (e.g. `SomeTableName` to `some_table_name`), queries to run before (e.g. disable triggers) and after (e.g. re-enable triggers or `REFRESH MATERIALIZED VIEWS`) the DML process, and more. 
+The config file includes all of the information needed for the migration.  Such information includes the connection details for the source and target databases, mappings of SQL types for the DDL phase (e.g. SQL Server's `NVARCHAR` to Postgres' `TEXT`), mappings of JDBC types for the DML phase, name transformations (e.g. `SomeTableName` to `some_table_name`), queries to run before (e.g. disable triggers) and after (e.g. re-enable triggers or `REFRESH MATERIALIZED VIEWS`) the DML process, number of concurrent threads, and more. 
 
 Run the DDL command
 --
-
+This will generate a SQL script with commands for `CREATE SCHEMA`, `CREATE TABLE`, etc.
 
 Execute the generated DDL script
 --
+Review the script generated in the previous step and make changes if needed, then execute it in your favorite SQL client, e.g. psql, PgAdmin, or DBeaver.
 
 Run the DML command
 --
-This will copy the data from the source database to your target Postgres database according to the settings in the config file
+This will copy the data from the source database to your target Postgres database according to the settings in the config file.
 
 Take a vacation
 --
 You probably just crammed weeks of work into a few hours.  I think that you deserve a vacation!
+
+# Watch tutorial video
+
+[![Migrate a SQL Server Database to Postgres](http://img.youtube.com/vi/5eF9_UB73TI/0.jpg)](http://www.youtube.com/watch?v=5eF9_UB73TI "How to Easily Migrate a SQL Server Database to Postgres")
 
 # Usage: 
 
@@ -54,6 +59,3 @@ Optional path to the config file. Defaults to `./Migrate2Postgres.conf`.
 --
 Optional path of the output/log file. Defaults to current directory with the project name and timestamp. The arguments are passed by position, so `<output-file>` can only be passed if `<config-file>` was passed explicitly.
 
-# Watch tutorial video:
-
-[![Migrate a SQL Server Database to Postgres](http://img.youtube.com/vi/5eF9_UB73TI/0.jpg)](http://www.youtube.com/watch?v=5eF9_UB73TI "How to Easily Migrate a SQL Server Database to Postgres")
