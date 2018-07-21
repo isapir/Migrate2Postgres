@@ -63,3 +63,4 @@ Optional path to the config file. Defaults to `./Migrate2Postgres.conf`.
 --
 Optional path of the output/log file. Defaults to current directory with the project name and timestamp. The arguments are passed by position, so `<output-file>` can only be passed if `<config-file>` was passed explicitly.
 
+See also the [shell/batch example scripts](examples/bin)
