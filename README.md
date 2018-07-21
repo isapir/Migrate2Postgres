@@ -4,10 +4,31 @@ This project allows you to easily migrate databases from other JDBC-compliant DB
 
 Currently the project ships with a [template for SQL Server](src/main/resources/templates/ms-sql-server.conf) as a source, but other source database systems can be added easily by following the same patterns that are documneted in the SQL Server template and the [example config files](examples/conf).
 
-# Requirements:
+# Requirements
 
  - Java Runtime Environment (JRE) 1.8 or later
  - JDBC Drivers for the DBMSs used
+
+# Getting Started
+
+Create a config file
+--
+The config file includes all of the information needed for the migration.  Such information includes the connection details for the source and target databases, mappings of SQL types for the DDL phase (e.g. SQL Server's `NVARCHAR` to Postgres' `TEXT`), mappings of JDBC types for the DML phase, name transformations (e.g. `SomeTableName` to `some_table_name`), queries to run before (e.g. disable triggers) and after (e.g. re-enable triggers or `REFRESH MATERIALIZED VIEWS`) the DML process, and more. 
+
+Run the DDL command
+--
+
+
+Execute the generated DDL script
+--
+
+Run the DML command
+--
+This will copy the data from the source database to your target Postgres database according to the settings in the config file
+
+Take a vacation
+--
+You probably just crammed weeks of work into a few hours.  I think that you deserve a vacation!
 
 # Usage: 
 
@@ -15,7 +36,9 @@ Currently the project ships with a [template for SQL Server](src/main/resources/
 
   `<options>`
 --
-The JVM (Java) options, like `classpath` and memory settings if needed
+The JVM (Java) options, like `classpath` and memory settings if needed.
+
+You can also pass some configuraion values in the options, which you might not want to keep in the config file, e.g. passwords etc.
 
   `<command>`
 --
@@ -29,7 +52,7 @@ Optional path to the config file. Defaults to `./Migrate2Postgres.conf`.
 
   `<output-file>`
 --
-Optional path of the output/log file. Defaults to current directory with the project name and timestamp.
+Optional path of the output/log file. Defaults to current directory with the project name and timestamp. The arguments are passed by position, so `<output-file>` can only be passed if `<config-file>` was passed explicitly.
 
 # Watch tutorial video:
 
