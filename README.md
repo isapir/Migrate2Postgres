@@ -25,11 +25,11 @@ The JVM (Java) options, like `classpath` and memory settings if needed
 
   `<config-file>`
 --
-Optional path to the config file. Defaults to current directory.
+Optional path to the config file. Defaults to `./Migrate2Postgres.conf`.
 
   `<output-file>`
 --
-Optional full path to an output file. Defaults to current directory with the project name and timestamp.
+Optional path of the output/log file. Defaults to current directory with the project name and timestamp.
 
 # Watch tutorial video:
 
