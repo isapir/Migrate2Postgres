@@ -13,9 +13,13 @@ Currently the project ships with a [template for SQL Server](src/main/resources/
 
 Create a config file
 --
-The config file is a JSON file that includes all of the information needed for the migration.  
+The config file is a JSON file that includes all of the information needed for the migration.
 
-That information includes the connection details for the source and target databases, mappings of SQL types for the DDL phase (e.g. SQL Server's `NVARCHAR` to Postgres' `TEXT`), mappings of JDBC types for the DML phase, name transformations (e.g. `SomeTableName` to `some_table_name`), queries to run before (e.g. disable triggers) and after (e.g. re-enable triggers or `REFRESH MATERIALIZED VIEWS`) the DML process, number of concurrent threads, and more. 
+That information includes the connection details for the source and target databases, mappings of SQL types for the DDL phase (e.g. SQL Server's `NVARCHAR` to Postgres' `TEXT`), mappings of JDBC types for the DML phase, name transformations (e.g. `SomeTableName` to `some_table_name`), queries to run before (e.g. disable triggers) and after (e.g. re-enable triggers or `REFRESH MATERIALIZED VIEWS`) the DML process, number of concurrent threads, and more.
+
+If the config file has a key named `template`, then the template specified in the value is read first.  Any keys that match the keys in the template override the template settings.
+
+Values that are wrapped with the `%` symbol are treated as variables, and are evaluated at runtime.  The variable values can be set either in the config file, or as Java System Properties.  So for example, you can specify a Java System Property via the JVM args, e.g. `-Dsource.database_name=AdventureWorks`, and then in the config use that variable as `%source.database_name%` which will evaluate to "AdventureWorks".  
 
 See the comments in the [template for SQL Server](src/main/resources/templates/ms-sql-server.conf) and the included [example config files](examples/conf) for more information.
 
