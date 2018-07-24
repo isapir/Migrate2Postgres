@@ -37,11 +37,9 @@ Values that are wrapped with the `%` symbol are treated as variables, and are ev
 
     `-Dsource.db_name=AdventureWorks`
     
-Then specifying the config value `%source.db_name%` will evaluate to "AdventureWorks" at runtime.  
+Then specifying the config value `%source.db_name%` will evaluate to "AdventureWorks" at runtime.  If the the same key is specified both in the config file and in the Java System Properties, the Java System Properties are used.
 
-If the the same key is specified both in the config file and in the Java System Properties, the Java System Properties are used.
-
-See the comments in the [template for SQL Server](src/main/resources/templates/ms-sql-server.conf) and the included [example config files](examples/conf) for more information.
+See the comments in the [defaults.conf](src/main/resources/templates/defaults.conf), [template for SQL Server](src/main/resources/templates/ms-sql-server.conf), and the included [example config files](examples/conf) for more information.
 
 Run the DDL command
 --
