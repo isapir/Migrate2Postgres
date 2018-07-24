@@ -39,7 +39,7 @@ Values that are wrapped with the `%` symbol are treated as variables, and are ev
     
 Then specifying the config value `%source.db_name%` will evaluate to "AdventureWorks" at runtime.  
 
-If the the same key is specified both in the config file and in the Java System Properties, the Java System Properties take precedence.
+If the the same key is specified both in the config file and in the Java System Properties, the Java System Properties are used.
 
 See the comments in the [template for SQL Server](src/main/resources/templates/ms-sql-server.conf) and the included [example config files](examples/conf) for more information.
 
