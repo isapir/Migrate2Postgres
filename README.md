@@ -20,7 +20,7 @@ That information includes the connection details for the source and target datab
 The "effective" configuration values are applied in the following manner:
 
 1) The `defaults` are read from [defaults.conf](src/main/resources/templates/defaults.conf)
-2) If the config file has a key named template, then the template specified in the value is read, e.g. [template for SQL Server](src/main/resources/templates/ms-sql-server.conf)
+2) If the config file has a key named `template`, then the template specified in the value is read, e.g. [ms-sql-server](src/main/resources/templates/ms-sql-server.conf)
 3) The configuration settings from the config file are set
 
 Configuration file keys that match the keys in the template files override the template settings, so for example if the config file specifies the key `dml.threads` with a value of `4`, it will overwrite the setting specified in the `defaults` template, which is set to "cores" (cores means the number of CPU cores available to the JVM that runs the tool).
