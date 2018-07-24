@@ -29,13 +29,13 @@ Values that are wrapped with the `%` symbol are treated as variables, and are ev
 
 1) By setting it in the config file as follows:
 
-    source : {
+    `source : {
         db_name : "AdventureWorks"
-    }
+    }`
 
 2) By setting a Java System Property in the `<options>` via the JVM args, i.e.
 
-    -Dsource.db_name=AdventureWorks
+    `-Dsource.db_name=AdventureWorks`
     
 Then specifying the config value `%source.db_name%` will evaluate to "AdventureWorks" at runtime.  
 
