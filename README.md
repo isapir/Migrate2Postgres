@@ -13,14 +13,14 @@ Currently the project ships with a [template for SQL Server](src/main/resources/
 
 Create a config file
 --
-The config file is a JSON file that includes all of the information needed for the migration.
+The config file is a JSON file that contains the information needed for the migration.  It can be a standalone file, or inherit from a template by specifying the `template` key where the value is a valid template, e.g. [ms-sql-server](src/main/resources/templates/ms-sql-server.conf).
 
 That information includes the connection details for the source and target databases, mappings of SQL types for the DDL phase (e.g. SQL Server's `NVARCHAR` to Postgres' `TEXT`), mappings of JDBC types for the DML phase, name transformations (e.g. `SomeTableName` to `some_table_name`), queries to run before (e.g. disable triggers) and after (e.g. re-enable triggers or `REFRESH MATERIALIZED VIEWS`) the DML process, number of concurrent threads, and more.
 
 The "effective" configuration values are applied in the following manner:
 
 1) The `defaults` are read from [defaults.conf](src/main/resources/templates/defaults.conf)
-2) If the config file has a key named `template`, then the template specified in the value is read, e.g. [ms-sql-server](src/main/resources/templates/ms-sql-server.conf)
+2) If the config file has a key named `template`, then the template specified in the value is read
 3) The values from the config file are set
 4) Values that are wrapped with the `%` symbol are evaluated from other config settings or Java System Properties
 
