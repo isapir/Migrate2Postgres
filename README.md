@@ -17,9 +17,29 @@ The config file is a JSON file that includes all of the information needed for t
 
 That information includes the connection details for the source and target databases, mappings of SQL types for the DDL phase (e.g. SQL Server's `NVARCHAR` to Postgres' `TEXT`), mappings of JDBC types for the DML phase, name transformations (e.g. `SomeTableName` to `some_table_name`), queries to run before (e.g. disable triggers) and after (e.g. re-enable triggers or `REFRESH MATERIALIZED VIEWS`) the DML process, number of concurrent threads, and more.
 
-If the config file has a key named `template`, then the template specified in the value is read first.  Any keys that match the keys in the template override the template settings.
+The "effective" configuration values are applied in the following manner:
 
-Values that are wrapped with the `%` symbol are treated as variables, and are evaluated at runtime.  The variable values can be set either in the config file, or as Java System Properties.  So for example, you can specify a Java System Property via the JVM args, e.g. `-Dsource.database_name=AdventureWorks`, and then in the config use that variable as `%source.database_name%` which will evaluate to "AdventureWorks".  
+1) The `defaults` are read from [defaults.conf](src/main/resources/templates/defaults.conf)
+2) If the config file has a key named template, then the template specified in the value is read, e.g. [template for SQL Server](src/main/resources/templates/ms-sql-server.conf)
+3) The configuration settings from the config file are set
+
+Configuration file keys that match the keys in the template files override the template settings, so for example if the config file specifies the key `dml.threads` with a value of `4`, it will overwrite the setting specified in the `defaults` template, which is set to "cores" (cores means the number of CPU cores available to the JVM that runs the tool).
+
+Values that are wrapped with the `%` symbol are treated as variables, and are evaluated at runtime.  The variable values can be set either in the config file by specifying the key path, or as Java System Properties.  So for example, you can specify the value of "AdventureWorks" to the key "source.db_name" in one of two ways:
+
+1) By setting it in the config file as follows:
+
+    source : {
+        db_name : "AdventureWorks"
+    }
+
+2) By setting a Java System Property in the `<options>` via the JVM args, i.e.
+
+    -Dsource.db_name=AdventureWorks
+    
+Then specifying the config value `%source.db_name%` will evaluate to "AdventureWorks" at runtime.  
+
+If the the same key is specified both in the config file and in the Java System Properties, the Java System Properties take precedence.
 
 See the comments in the [template for SQL Server](src/main/resources/templates/ms-sql-server.conf) and the included [example config files](examples/conf) for more information.
 
