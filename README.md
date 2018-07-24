@@ -70,7 +70,18 @@ You probably just crammed weeks of work into a few hours.  I think that you dese
 --
 The JVM (Java) options, like `classpath` and memory settings if needed.
 
-You can also pass some configuraion values in the options, which you might not want to keep in the config file, e.g. passwords etc.
+You can also pass some configuraion values in the options, which you might not want to keep in the config file, e.g. passwords etc., so for example if you set the following Java System Properties:
+
+    -Dsqlserver.username=pgmigrator -Dsqlserver.password=secret
+    
+Then you can refer to it in the config file as follows:
+
+    connections : {
+        mssql : {
+             user     : "%sqlserver.username%"
+            ,password : "%sqlserver.password%"
+            // rest ommitted for clarity
+    }
 
   `<command>`
 --
