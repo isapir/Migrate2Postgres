@@ -39,18 +39,14 @@ public class Schema {
 
         this.config = config;
 
-        Connection conSrc = config.connect(config.source);
-
         String informationSchemaSql = (String) config.config.get("information_schema.query");
-        Statement statement;
-        ResultSet resultSet;
-
         if (informationSchemaSql.isEmpty()){
             throw new IllegalArgumentException("information_schema.query is missing");
         }
 
-        statement = conSrc.createStatement();
-        resultSet = statement.executeQuery(informationSchemaSql);
+        Connection conSrc = config.connect(config.source);
+        Statement statement = conSrc.createStatement();
+        ResultSet resultSet = statement.executeQuery(informationSchemaSql);
 
         if (!resultSet.isBeforeFirst()){
             System.out.println("information_schema.query returned no results: \n" + informationSchemaSql);

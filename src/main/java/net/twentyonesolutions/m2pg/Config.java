@@ -1,7 +1,5 @@
 package net.twentyonesolutions.m2pg;
 
-import com.google.gson.Gson;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -12,14 +10,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.function.UnaryOperator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class Config {
@@ -212,113 +208,28 @@ public class Config {
     }
 
 
-    private static Map<String, Object> flattenAndPopulate(Map<String, Object> config) {
-
-        Map<String, Object> result = Util.flattenKeys(config);
-
-        Map systemProperties = new TreeMap(String.CASE_INSENSITIVE_ORDER);
-        systemProperties.putAll(System.getProperties());
-
-        // populate template %v.a.l.ues% with values from JSON path
-        Pattern pattern = Pattern.compile("\\%[a-zA-Z_\\.]+\\%");
-
-        for (Map.Entry<String, Object> e : result.entrySet()){
-
-            Object v = e.getValue();
-
-            if (v instanceof String){
-
-                String origValue = (String)v;
-                Matcher matcher = pattern.matcher(origValue);
-                boolean hasMatches = matcher.find();
-                if (hasMatches){
-
-                    String fullPath = e.getKey();
-                    String parentPath = fullPath.contains(".") ? fullPath.substring(0, fullPath.lastIndexOf('.')) : "";
-                    String localPath = fullPath.contains(".") ? fullPath.substring(fullPath.lastIndexOf('.') + 1) : fullPath;
-
-                    List<int[]> substringPosition = new ArrayList<int[]>();
-                    do {
-                        substringPosition.add(new int[]{ matcher.start(), matcher.end() });
-                        hasMatches = matcher.find();
-                    }
-                    while (hasMatches);
-
-                    if (!substringPosition.isEmpty()){
-
-                        StringBuilder sb = new StringBuilder(origValue.length() * 2);
-                        int pos = 0;
-
-                        for (int[] pair : substringPosition){
-                            String substring = origValue.substring(pair[0], pair[1]);
-                            String localKey = substring.substring(1, substring.length() - 1);       // remove %-% signs
-                            String key = parentPath.isEmpty() ? localKey : parentPath + "." + localKey;
-
-                            String value;   // currently supporting only String replacements
-
-                            // check SystemProperty, full key, local key, default to original value
-                            if (systemProperties.containsKey(localKey))
-                                value = (String)systemProperties.get(localKey);
-                            else if (result.containsKey(key))
-                                value = (String)result.get(key);
-                            else if (result.containsKey(localKey))
-                                value = (String)result.get(localKey);
-                            else value = substring;
-
-                            sb.append(origValue.substring(pos, pair[0]));
-                            pos = pair[1];
-                            sb.append(value);
-                        }
-
-                        if (origValue.length() > pos)
-                            sb.append(origValue.substring(pos));
-
-                        String populated = sb.toString();
-
-                        // set the populated value to the flat key
-                        result.put(fullPath, populated);
-
-                        if (!origValue.equals(populated)){
-                            // set the populated value to the hierarchical key if a Map is found in its location and its value is not of type Map
-                            String[] pathParts = parentPath.split("\\.");
-                            Map m = result;
-
-                            for (String part : pathParts){
-
-                                if (m.get(part) instanceof Map){
-                                    m = (Map)m.get(part);
-                                }
-                                else {
-                                    m = null;
-                                    break;
-                                }
-                            }
-
-                            if (m instanceof Map && !(m.get(localPath) instanceof Map))
-                                m.put(localPath, populated);
-                        }
-                    }
-                }
-            }
-        }
-
-        return result;
-    }
-
-
     public static Config fromFile(String configFile) throws IOException {
 
         if (configFile == null || configFile.isEmpty())
             configFile = DEFAULT_CONFIG_FILENAME;
 
-        Map conf = readConfigFile(configFile);
+        Map conf = new HashMap(64);
+        Map confDefaults = readConfigFile("defaults");          // read defaults template
+        conf.putAll(Util.flattenKeys(confDefaults));
 
-        String templateName = (String)conf.getOrDefault("template", "");
+        Map confFromFile = readConfigFile(configFile);
+
+        String templateName = (String)confFromFile.getOrDefault("template", "");
         if (!templateName.isEmpty()){
-            Map template = readConfigFile(templateName);
-            template.putAll(conf);
-            conf = flattenAndPopulate(template);    // populate again in case the template contains keys that should be evaluated
+            Map confTemplate = readConfigFile(templateName);
+            conf.putAll(Util.flattenKeys(confTemplate));                          // add template config
+
+//            confTemplate.putAll(confFromFile);
+//            confFromFile = flattenAndPopulate(confTemplate);    // populate again in case the template contains keys that should be evaluated
         }
+
+        conf.putAll(Util.flattenKeys(confFromFile));                              // add file config
+        conf = Util.flattenAndPopulate(conf);                        // flatten and populate
 
         Config result = new Config(conf);
 
@@ -342,35 +253,36 @@ public class Config {
         }
         else {
 
-            String resourcePath = "/templates/" + configFile + ".conf";
-            URL resource = PgMigrator.class.getResource(resourcePath);
-
-            if (resource == null)
-                throw new IllegalArgumentException(
-                        "Config file not found at "
-                                + f.getCanonicalPath()
-                                + " and not as a resource at " + resourcePath
-                );
-
-            System.out.println("Using config file " + resource.getPath());
-
-            is = PgMigrator.class.getResourceAsStream(resourcePath);
+            is = getTemplateInputStream(configFile);
         }
 
         java.util.Scanner scanner = new java.util.Scanner(is).useDelimiter("\\A");
         String jsonString = scanner.hasNext() ? scanner.next().trim() : "";
 
-        if (!jsonString.startsWith("{"))    // json string might close with } even if it's missing the top level braces
-            jsonString = "{\n" + jsonString + "\n}";
-
-        Gson gson = new Gson();
-
-        Map conf = gson.fromJson(jsonString, Map.class);
-
-        Map map  = (Map) Util.getJsonElement(conf, "");
-        Map flat = flattenAndPopulate(map);
-
+        Map flat = Util.parseJsonToMap(jsonString);
         return flat;
+    }
+
+
+    private static InputStream getTemplateInputStream(String configFile) throws IOException {
+        InputStream is;
+        String resourcePath = "/templates/" + configFile + ".conf";
+        URL resource = PgMigrator.class.getResource(resourcePath);
+
+        if (resource == null) {
+
+            File f = new File(configFile);
+            throw new IllegalArgumentException(
+                    "Config file not found at "
+                            + f.getCanonicalPath()
+                            + " and not as a resource at " + resourcePath
+            );
+        }
+
+        System.out.println("Using config file " + resource.getPath());
+
+        is = PgMigrator.class.getResourceAsStream(resourcePath);
+        return is;
     }
 
 

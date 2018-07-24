@@ -141,11 +141,18 @@ public class PgMigrator {
                 numThreads = ((Number) arg).intValue();
             }
             else if (arg instanceof String){
-                try {
-                    numThreads = Integer.parseInt((String) arg);
+
+                if (((String) arg).equalsIgnoreCase("cores")){
+                    numThreads = Runtime.getRuntime().availableProcessors();
                 }
-                catch (NumberFormatException ex){
-                    System.err.println("Failed to parse value of [dml.threads]");
+                else {
+
+                    try {
+                        numThreads = Integer.parseInt((String) arg);
+                    }
+                    catch (NumberFormatException ex){
+                        System.err.println("Failed to parse value of [dml.threads]");
+                    }
                 }
             }
             else {

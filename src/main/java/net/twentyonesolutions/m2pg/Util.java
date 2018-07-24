@@ -1,5 +1,6 @@
 package net.twentyonesolutions.m2pg;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -21,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Util {
@@ -76,6 +79,7 @@ public class Util {
 
         return flattenKeys(map, "", result);
     }
+
 
     private static Map flattenKeys(Map<String, Object> json, String path, Map result) {
 
@@ -292,4 +296,109 @@ public class Util {
 
         Files.write(path, Collections.singleton(logentry), StandardCharsets.UTF_8, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
     }
+
+
+    public static Map<String, Object> flattenAndPopulate(Map<String, Object> config) {
+
+        Map<String, Object> result = flattenKeys(config);
+
+        Map systemProperties = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+        systemProperties.putAll(System.getProperties());
+
+        // populate template %v.a.l.ues% with values from JSON path
+        Pattern pattern = Pattern.compile("\\%[a-zA-Z_\\.]+\\%");
+
+        for (Map.Entry<String, Object> e : result.entrySet()){
+
+            Object v = e.getValue();
+
+            if (v instanceof String){
+
+                String origValue = (String)v;
+                Matcher matcher = pattern.matcher(origValue);
+                boolean hasMatches = matcher.find();
+                if (hasMatches){
+
+                    String fullPath = e.getKey();
+                    String parentPath = fullPath.contains(".") ? fullPath.substring(0, fullPath.lastIndexOf('.')) : "";
+                    String localPath = fullPath.contains(".") ? fullPath.substring(fullPath.lastIndexOf('.') + 1) : fullPath;
+
+                    List<int[]> substringPosition = new ArrayList<int[]>();
+                    do {
+                        substringPosition.add(new int[]{ matcher.start(), matcher.end() });
+                        hasMatches = matcher.find();
+                    }
+                    while (hasMatches);
+
+                    if (!substringPosition.isEmpty()){
+
+                        StringBuilder sb = new StringBuilder(origValue.length() * 2);
+                        int pos = 0;
+
+                        for (int[] pair : substringPosition){
+                            String substring = origValue.substring(pair[0], pair[1]);
+                            String localKey = substring.substring(1, substring.length() - 1);       // remove %-% signs
+                            String key = parentPath.isEmpty() ? localKey : parentPath + "." + localKey;
+
+                            String value;   // currently supporting only String replacements
+
+                            // check SystemProperty, full key, local key, default to original value
+                            if (systemProperties.containsKey(localKey))
+                                value = (String)systemProperties.get(localKey);
+                            else if (result.containsKey(key))
+                                value = (String)result.get(key);
+                            else if (result.containsKey(localKey))
+                                value = (String)result.get(localKey);
+                            else value = substring;
+
+                            sb.append(origValue.substring(pos, pair[0]));
+                            pos = pair[1];
+                            sb.append(value);
+                        }
+
+                        if (origValue.length() > pos)
+                            sb.append(origValue.substring(pos));
+
+                        String populated = sb.toString();
+
+                        // set the populated value to the flat key
+                        result.put(fullPath, populated);
+
+                        if (!origValue.equals(populated)){
+                            // set the populated value to the hierarchical key if a Map is found in its location and its value is not of type Map
+                            String[] pathParts = parentPath.split("\\.");
+                            Map m = result;
+
+                            for (String part : pathParts){
+
+                                if (m.get(part) instanceof Map){
+                                    m = (Map)m.get(part);
+                                }
+                                else {
+                                    m = null;
+                                    break;
+                                }
+                            }
+
+                            if (m instanceof Map && !(m.get(localPath) instanceof Map))
+                                m.put(localPath, populated);
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+    public static Map parseJsonToMap(String jsonString){
+
+        Gson gson = new Gson();
+        Map conf = gson.fromJson(jsonString, Map.class);
+        Map map  = (Map) getJsonElement(conf, "");
+
+        return map;
+    }
+
 }
