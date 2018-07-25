@@ -118,10 +118,10 @@ At runtime, first the defaults.conf file is read, then if a template is specifie
 +-- connections                (struct)
 |
 +-- information_schema
-  |
-  +-- query
-  |
-  +-- database_name
+    |
+    +-- query
+    |
+    +-- database_name
 |
 +-- schema_mapping
 |
@@ -134,32 +134,32 @@ At runtime, first the defaults.conf file is read, then if a template is specifie
 +-- column_transform
 |
 +-- ddl
-  |
-  +-- drop_schema              ([false]|true)
-  |
-  +-- sql_type_mapping         (struct)
-  |
-  +-- column_default_replace   (struct)
+    |
+    +-- drop_schema              ([false]|true)
+    |
+    +-- sql_type_mapping         (struct)
+    |
+    +-- column_default_replace   (struct)
 |
 +-- dml
-  |
-  +-- execute
     |
-    +-- before_all
+    +-- execute
+        |
+        +-- before_all
+        |
+        +-- after_all
+        |
+        +-- recomended
     |
-    +-- after_all
+    +-- threads            (["cores", integer])
     |
-    +-- recomended
-  |
-  +-- threads            (["cores", integer])
-  |
-  +-- on_error
-  |
-  +-- jdbc_type_mapping
-  |
-  +-- source_column_quote_prefix
-  |
-  +-- source_column_quote_suffix
+    +-- on_error
+    |
+    +-- jdbc_type_mapping
+    |
+    +-- source_column_quote_prefix
+    |
+    +-- source_column_quote_suffix
 ```
 
 `name`
