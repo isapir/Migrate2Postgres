@@ -135,31 +135,31 @@ At runtime, first the defaults.conf file is read, then if a template is specifie
 |
 +-- ddl
     |
-    +-- drop_schema              ([false]|true)
+    +-- drop_schema                       ([false]|true) - whether to add DROP SCHEMA IF EXISTS before each schema
     |
-    +-- sql_type_mapping         (struct)
+    +-- sql_type_mapping                  struct - maps SQL data types, e.g. DATETIME -> TIMESTAMPTZ, IMAGE -> BYTEA, etc.
     |
-    +-- column_default_replace   (struct)
+    +-- column_default_replace            struct - maps DEFAULT column values by using REGular EXpressions
 |
 +-- dml
     |
     +-- execute
         |
-        +-- before_all
+        +-- before_all                    array of SQL commands to run before data copy
         |
-        +-- after_all
+        +-- after_all                     array of SQL commands to run after data copy
         |
-        +-- recomended
+        +-- recomended                    ([""], "all") - specifying "all" will execute recommendations
     |
-    +-- threads            (["cores", integer])
+    +-- threads                           (["cores", integer]) - number of concurrent connections
     |
-    +-- on_error
+    +-- on_error                          string 
     |
-    +-- jdbc_type_mapping
+    +-- jdbc_type_mapping                 struct - maps nonstandard JDBC types during data copy
     |
-    +-- source_column_quote_prefix
+    +-- source_column_quote_prefix        string - a prefix for quoting columns, e.g. `[` in SQL Server
     |
-    +-- source_column_quote_suffix
+    +-- source_column_quote_suffix        string - a suffix for quoting columns, e.g. `]` in SQL Server
 ```
 
 `name`
