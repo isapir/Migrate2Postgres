@@ -112,59 +112,59 @@ Values that are wrapped in `%` symbols are treated as varaibles and evaluated at
 ```
 *
 |
-+-- name                                  string - name of migration project, used as prefix in logs etc.
++-- name                              string - name of migration project, used as prefix in logs etc.
 |
-+-- template                              string - a template to be used, e.g. "ms-sql-server"
++-- template                          string - a template to be used, e.g. "ms-sql-server"
 |
-+-- source                                string - the key from connections that will be used as the source connection
++-- source                            string - the key from connections that will be used as the source connection
 |
-+-- target                                string - the key from connections that will be used as the target connection
++-- target                            string - the key from connections that will be used as the target connection
 |
-+-- connections                           struct - key is the connection name, value is a struct with at least connectionString, user, password
++-- connections                       struct - key is the connection name, value is a struct with at least connectionString, user, password
 |
 +-- information_schema
     |
-    +-- query                             string - SQL query that will return all of the tables and columns to be migrated
+    +-- query                         string - SQL query that will return all of the tables and columns to be migrated
     |
-    +-- database_name                     string - used in the information_schema.query to specify the source database
+    +-- database_name                 string - used in the information_schema.query to specify the source database
 |
-+-- schema_mapping                        struct - maps schema names if needed, e.g. "dbo" -> "public"
++-- schema_mapping                    struct - maps schema names if needed, e.g. "dbo" -> "public"
 |
-+-- table_mapping                         struct - maps table names if needed, e.g. "SomeVeryLongTableName" -> "a_table_name"
++-- table_mapping                     struct - maps table names if needed, e.g. "SomeVeryLongTableName" -> "a_table_name"
 |
-+-- column_mapping                        struct - maps column names if needed, e.g. "group" -> "group_name"
++-- column_mapping                    struct - maps column names if needed, e.g. "group" -> "group_name"
 |
-+-- table_transform                       string - ([""], "lower_case", "upper_case", "camel_to_snake_case")
++-- table_transform                   string - ([""], "lower_case", "upper_case", "camel_to_snake_case")
 |
-+-- column_transform                      string - ([""], "lower_case", "upper_case", "camel_to_snake_case")
++-- column_transform                  string - ([""], "lower_case", "upper_case", "camel_to_snake_case")
 |
 +-- ddl
     |
-    +-- drop_schema                       ([false]|true) - whether to add DROP SCHEMA IF EXISTS before each schema
+    +-- drop_schema                   ([false]|true) - whether to add DROP SCHEMA IF EXISTS before each schema
     |
-    +-- sql_type_mapping                  struct - maps SQL data types, e.g. DATETIME -> TIMESTAMPTZ, IMAGE -> BYTEA, etc.
+    +-- sql_type_mapping              struct - maps SQL data types, e.g. DATETIME -> TIMESTAMPTZ, IMAGE -> BYTEA, etc.
     |
-    +-- column_default_replace            struct - maps DEFAULT column values by using REGular EXpressions
+    +-- column_default_replace        struct - maps DEFAULT column values by using REGular EXpressions
 |
 +-- dml
     |
     +-- execute
         |
-        +-- before_all                    array of SQL commands to run before data copy
+        +-- before_all                array of SQL commands to run before data copy
         |
-        +-- after_all                     array of SQL commands to run after data copy
+        +-- after_all                 array of SQL commands to run after data copy
         |
-        +-- recomended                    ([""], "all") - specifying "all" will execute recommendations
+        +-- recomended                ([""], "all") - specifying "all" will execute recommendations
     |
-    +-- threads                           (["cores", integer]) - number of concurrent connections
+    +-- threads                       (["cores", integer]) - number of concurrent connections
     |
-    +-- on_error                          string - (["rollback"])
+    +-- on_error                      string - (["rollback"])
     |
-    +-- jdbc_type_mapping                 struct - maps nonstandard JDBC types during data copy
+    +-- jdbc_type_mapping             struct - maps nonstandard JDBC types during data copy
     |
-    +-- source_column_quote_prefix        string - a prefix for quoting columns, e.g. `[` in SQL Server
+    +-- source_column_quote_prefix    string - a prefix for quoting columns, e.g. `[` in SQL Server
     |
-    +-- source_column_quote_suffix        string - a suffix for quoting columns, e.g. `]` in SQL Server
+    +-- source_column_quote_suffix    string - a suffix for quoting columns, e.g. `]` in SQL Server
 ```
 
 `name`
