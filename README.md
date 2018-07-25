@@ -124,15 +124,15 @@ At runtime, first the defaults.conf file is read, then if a template is specifie
     |
     +-- database_name                     string - used in the information_schema.query to specify the source database
 |
-+-- schema_mapping
++-- schema_mapping                        struct - maps schema names if needed, e.g. "dbo" -> "public"
 |
-+-- table_mapping
++-- table_mapping                         struct - maps table names if needed, e.g. "SomeVeryLongTableName" -> "a_table_name"
 |
-+-- column_mapping
++-- column_mapping                        struct - maps column names if needed, e.g. "group" -> "group_name"
 |
-+-- table_transform
++-- table_transform                       string - ([""], "lower_case", "upper_case", "camel_to_snake_case")
 |
-+-- column_transform
++-- column_transform                      string - ([""], "lower_case", "upper_case", "camel_to_snake_case")
 |
 +-- ddl
     |
@@ -154,7 +154,7 @@ At runtime, first the defaults.conf file is read, then if a template is specifie
     |
     +-- threads                           (["cores", integer]) - number of concurrent connections
     |
-    +-- on_error                          string 
+    +-- on_error                          string - (["rollback"])
     |
     +-- jdbc_type_mapping                 struct - maps nonstandard JDBC types during data copy
     |
