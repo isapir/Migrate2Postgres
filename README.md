@@ -105,6 +105,10 @@ The Config file is in JSON format and it contains the details of the Migration P
 
 At runtime, first the defaults.conf file is read, then if a template is specified in the project's config file its values are applied, and then the settings from the project's config file are applied.  Settings with the same path of keys overwrite previous values of the same path.
 
+As a JSON file, backslashes must be escaped, so if you want to put the string `"a\b"` you must escape the backslash and write it as `"a\\b"`.
+
+Values that are wrapped in `%` symbols are treated as varaibles and evaluated at runtime, so for example if you specify a value of `%sqlserver.password%`, the tool will look for a value with that key either in the JVM System Properties, or the config files, and replace the variable with that value.
+
 ```
 *
 |
