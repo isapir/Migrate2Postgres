@@ -106,22 +106,23 @@ The Config file is in JSON format and it contains the details of the Migration P
 At runtime, first the defaults.conf file is read, then if a template is specified in the project's config file its values are applied, and then the settings from the project's config file are applied.  Settings with the same path of keys overwrite previous values of the same path.
 
 ```
-.
-+-- name
+*
 |
-+-- template
++-- name                                  string - name of migration project, used as prefix in logs etc.
 |
-+-- source
++-- template                              string - a template to be used, e.g. "ms-sql-server"
 |
-+-- target
++-- source                                string - the key from connections that will be used as the source connection
 |
-+-- connections                (struct)
++-- target                                string - the key from connections that will be used as the target connection
+|
++-- connections                           struct - key is the connection name, value is a struct with at least connectionString, user, password
 |
 +-- information_schema
     |
-    +-- query
+    +-- query                             string - SQL query that will return all of the tables and columns to be migrated
     |
-    +-- database_name
+    +-- database_name                     string - used in the information_schema.query to specify the source database
 |
 +-- schema_mapping
 |
