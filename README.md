@@ -98,3 +98,71 @@ Optional path to the config file. Defaults to `./Migrate2Postgres.conf`.
 Optional path of the output/log file. Defaults to current directory with the project name and timestamp. The arguments are passed by position, so `<output-file>` can only be passed if `<config-file>` was passed explicitly.
 
 See also the [shell/batch example scripts](examples/bin)
+
+# Config File Reference (WIP)
+
+The Config file is in JSON format and it contains the details of the Migration Project.
+
+At runtime, first the defaults.conf file is read, then if a template is specified in the project's config file its values are applied, and then the settings from the project's config file are applied.  Settings with the same path of keys overwrite previous values of the same path.
+
+```
+.
++-- name
+|
++-- template
+|
++-- source
+|
++-- target
+|
++-- connections                (struct)
+|
++-- information_schema
+  |
+  +-- query
+  |
+  +-- database_name
+|
++-- schema_mapping
+|
++-- table_mapping
+|
++-- column_mapping
+|
++-- table_transform
+|
++-- column_transform
+|
++-- ddl
+  |
+  +-- drop_schema              ([false]|true)
+  |
+  +-- sql_type_mapping         (struct)
+  |
+  +-- column_default_replace   (struct)
+|
++-- dml
+  |
+  +-- execute
+    |
+    +-- before_all
+    |
+    +-- after_all
+    |
+    +-- recomended
+  |
+  +-- threads            (["cores", integer])
+  |
+  +-- on_error
+  |
+  +-- jdbc_type_mapping
+  |
+  +-- source_column_quote_prefix
+  |
+  +-- source_column_quote_suffix
+```
+
+`name`
+--
+Indicates the name of the migration project.  Output files are prefixed with that name.
+
