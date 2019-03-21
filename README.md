@@ -134,9 +134,9 @@ Values that are wrapped in `%` symbols are treated as varaibles and evaluated at
 |
 +-- column_mapping                    struct - maps column names if needed, e.g. "group" -> "group_name"
 |
-+-- table_transform                   string - ([""], "lower_case", "upper_case", "camel_to_snake_case")
++-- table_transform                   string - ([""], "lower_case", "upper_case", "camel_to_snake_case", "dont_change")
 |
-+-- column_transform                  string - ([""], "lower_case", "upper_case", "camel_to_snake_case")
++-- column_transform                  string - ([""], "lower_case", "upper_case", "camel_to_snake_case", "dont_change")
 |
 +-- ddl
     |

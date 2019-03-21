@@ -340,6 +340,9 @@ public class Config {
 
             if (type.equalsIgnoreCase("camel_to_snake_case"))
                 return Util.convertCamelToSnakeCase(input);
+			
+			if (type.equalsIgnoreCase("dont_change"))
+                return Util.convertDontChangeCase(input);
         }
 
         return input;
