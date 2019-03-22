@@ -42,6 +42,7 @@ public class Config {
     Map<String, Object> dml, ddl;
     Map<String, Object> schemaMapping, tableMapping, columnMapping;
     Map<String, String> columnDefaultReplace;
+	Map<String, String> postgresTypeCasting;
 
     String name, source, target;
 
@@ -87,6 +88,7 @@ public class Config {
             ,"source_column_quote_prefix"
             ,"source_column_quote_suffix"
             ,"threads"
+			,"implicit_conversion_types"
         };
 
         // populate result with config value or default of empty string
@@ -95,7 +97,7 @@ public class Config {
         }
 
         // wrap single item String in List
-        for (String k : new String[]{ "execute.before_all", "execute.after_all" }){
+        for (String k : new String[]{ "execute.before_all", "execute.after_all", "implicit_conversion_types"}){
             Object v = result.get(k);
             if (v instanceof String){
                 result.put(k, new ArrayList<String>(){{ add((String)v); }});
@@ -104,7 +106,7 @@ public class Config {
 
         mapSrc = (Map)config.get(prefix + "jdbc_type_mapping");
         result.put("jdbc_type_mapping", getCaseInsensitiveMap(mapSrc, uppercaseValue));
-
+		
         this.dml = result;
     }
 

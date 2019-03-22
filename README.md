@@ -155,6 +155,8 @@ Values that are wrapped in `%` symbols are treated as varaibles and evaluated at
         +-- after_all                 array of SQL commands to run after data copy
         |
         +-- recomended                ([""], "all") - specifying "all" will execute recommendations
+		|
+		+-- implicitConversionTypes   array of source column types that should be cast implicitly with postgres (for example "UNIQUEIDENTIFIER")
     |
     +-- threads                       (["cores", integer]) - number of concurrent connections
     |
