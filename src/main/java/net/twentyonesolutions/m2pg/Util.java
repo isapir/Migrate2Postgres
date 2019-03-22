@@ -71,6 +71,16 @@ public class Util {
                 .replaceAll("([^_A-Z0-9])([A-Z0-9])", "$1_$2")
                 .toLowerCase();
     }
+	
+	 /**
+     * If it is necessary to do not change case, add  quote to input string;
+     *
+     * @param anyCaseString
+     * @return
+     */
+	public static String convertDontChangeCase(String anyCaseString){
+		return "\""+anyCaseString+"\"";
+	}
 
 
     public static Map<String, Object> flattenKeys(Map<String, Object> map){

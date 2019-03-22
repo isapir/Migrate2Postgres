@@ -134,9 +134,9 @@ Values that are wrapped in `%` symbols are treated as varaibles and evaluated at
 |
 +-- column_mapping                    struct - maps column names if needed, e.g. "group" -> "group_name"
 |
-+-- table_transform                   string - ([""], "lower_case", "upper_case", "camel_to_snake_case")
++-- table_transform                   string - ([""], "lower_case", "upper_case", "camel_to_snake_case", "dont_change")
 |
-+-- column_transform                  string - ([""], "lower_case", "upper_case", "camel_to_snake_case")
++-- column_transform                  string - ([""], "lower_case", "upper_case", "camel_to_snake_case", "dont_change")
 |
 +-- ddl
     |
@@ -155,6 +155,8 @@ Values that are wrapped in `%` symbols are treated as varaibles and evaluated at
         +-- after_all                 array of SQL commands to run after data copy
         |
         +-- recomended                ([""], "all") - specifying "all" will execute recommendations
+		|
+		+-- implicitConversionTypes   array of source column types that should be cast implicitly with postgres (for example "UNIQUEIDENTIFIER")
     |
     +-- threads                       (["cores", integer]) - number of concurrent connections
     |

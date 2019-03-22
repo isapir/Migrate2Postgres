@@ -147,8 +147,7 @@ public class Schema {
 
             statSrc = conSrc.createStatement();
 
-            PreparedStatement statInsert = conTgt.prepareStatement(qInsert);
-
+            PreparedStatement statInsert = conTgt.prepareStatement(qInsert);			
             statSrc.setFetchSize(1000);
 
             rs = statSrc.executeQuery(qSelect);
@@ -156,28 +155,37 @@ public class Schema {
             ResultSetMetaData rsMetaData = rs.getMetaData();
 
             Map<String, String> jdbcTypeMapping = (Map<String, String>) config.dml.get("jdbc_type_mapping");
-
+			List<String> implicitConversionTypes = (List<String>) config.dml.getOrDefault("implicit_conversion_types", Collections.EMPTY_LIST);
+			
             int columnCount = rsMetaData.getColumnCount();
 
             int[] columnTypes = new int[columnCount];
             //        SQLType[] sqlTypes = new SQLType[columnCount];  // TODO: use this instead of columnTypes when pgjdbc will support setObject with SQLType
 
             for (int i = 1; i <= columnCount; i++) {
-
-                int srcType = rsMetaData.getColumnType(i);
-                int tgtType = srcType;
-
-                // translate unsupported types, e.g. nvarchar to varchar, dml jdbcTypeMapping is based on JDBC types, while ddl jdbcTypeMapping is based on SQL types
-                //            if (jdbcTypeMapping.containsKey(String.valueOf(srcType)))
-                //                tgtType = Integer.parseInt(jdbcTypeMapping.getOrDefault(String.valueOf(srcType), String.valueOf(tgtType)));
-
-                String srcTypeName = JDBCType.valueOf(srcType).getName();   // WARN: rsMetaData.getColumnTypeName(i) returns the vendor's name instead of JDBC name, e.g. ntext instead of longnvarchar for MSSQL
-                if (jdbcTypeMapping.containsKey(srcTypeName)) {
-                    String tgtTypeName = jdbcTypeMapping.get(srcTypeName);
-                    tgtType = JDBCType.valueOf(tgtTypeName).getVendorTypeNumber();
-                }
-
-                columnTypes[i - 1] = tgtType;
+				String sourceColumnType=new String();
+				sourceColumnType=table.columns.get(i-1).type.toString();
+				if(implicitConversionTypes.contains(sourceColumnType)){		
+					columnTypes[i - 1]=java.sql.Types.OTHER;
+				}else{			
+					int srcType = rsMetaData.getColumnType(i);
+					int tgtType = srcType;
+								
+					// translate unsupported types, e.g. nvarchar to varchar, dml jdbcTypeMapping is based on JDBC types, while ddl jdbcTypeMapping is based on SQL types
+					//            if (jdbcTypeMapping.containsKey(String.valueOf(srcType)))
+					//                tgtType = Integer.parseInt(jdbcTypeMapping.getOrDefault(String.valueOf(srcType), String.valueOf(tgtType)));
+	
+					
+					String srcTypeName = JDBCType.valueOf(srcType).getName();// WARN: rsMetaData.getColumnTypeName(i) returns the vendor's name instead of JDBC name, e.g. ntext instead of longnvarchar for MSSQL
+					
+					
+					if (jdbcTypeMapping.containsKey(srcTypeName)) {
+						String tgtTypeName = jdbcTypeMapping.get(srcTypeName);
+						
+						tgtType = JDBCType.valueOf(tgtTypeName).getVendorTypeNumber();
+					}
+					columnTypes[i - 1] = tgtType;
+				}
             }
 
             boolean hasErrors = false;
@@ -190,8 +198,7 @@ public class Schema {
                 for (int i = 1; i <= columnCount; i++) {
                     Object value = rs.getObject(i);
                     values[i - 1] = value;
-                    statInsert.setObject(i, value, columnTypes[i - 1]);
-                    //                statInsert.setObject(i, value, sqlTypes[i - 1]);    // throws java.sql.SQLFeatureNotSupportedException: Method org.postgresql.jdbc.PgPreparedStatement.setObject is not yet implemented.
+					statInsert.setObject(i, value, columnTypes[i - 1]); // throws java.sql.SQLFeatureNotSupportedException: Method org.postgresql.jdbc.PgPreparedStatement.setObject is not yet implemented.					                                    
                 }
 
                 try {
