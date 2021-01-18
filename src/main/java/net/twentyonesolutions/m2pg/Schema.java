@@ -265,7 +265,8 @@ public class Schema {
                         }
                         else {
                             log.append("Recommended:\n\t")
-                                    .append(sqlRecommended);
+                                    .append(sqlRecommended)
+                                    .append("\n");
                         }
                     } else {
                         throw new RuntimeException("No results found for " + qSelect);
