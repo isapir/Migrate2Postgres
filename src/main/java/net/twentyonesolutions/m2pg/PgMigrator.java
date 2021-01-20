@@ -169,8 +169,13 @@ public class PgMigrator {
         for (String tableName : schema.schema.keySet()){
 
             Callable<String> callable = () -> {
-                String log = schema.copyTable(tableName, progress);
-                return log;
+                try {
+                    String log = schema.copyTable(tableName, progress);
+                    return log;
+                }
+                catch (Exception ex) {
+                    return ex.getMessage();
+                }
             };
 
             FutureTask<String> task = new FutureTask(callable);
@@ -217,7 +222,7 @@ public class PgMigrator {
         Util.log(path, logentry);
 
         System.out.println("\n" + logentry);
-        System.out.println("See log and recommended actions at " + path);
+        System.out.println("See log and recommended actions at " + path.toAbsolutePath());
     }
 
 

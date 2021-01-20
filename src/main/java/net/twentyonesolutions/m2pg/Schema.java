@@ -162,25 +162,37 @@ public class Schema {
             int[] columnTypes = new int[columnCount];
             //        SQLType[] sqlTypes = new SQLType[columnCount];  // TODO: use this instead of columnTypes when pgjdbc will support setObject with SQLType
 
+            boolean hasErrors = false;
+
             for (int i = 1; i <= columnCount; i++) {
 
-                int srcType = rsMetaData.getColumnType(i);
-                int tgtType = srcType;
+                int srcType = 0, tgtType;
+                String srcTypeName;
 
-                // translate unsupported types, e.g. nvarchar to varchar, dml jdbcTypeMapping is based on JDBC types, while ddl jdbcTypeMapping is based on SQL types
-                //            if (jdbcTypeMapping.containsKey(String.valueOf(srcType)))
-                //                tgtType = Integer.parseInt(jdbcTypeMapping.getOrDefault(String.valueOf(srcType), String.valueOf(tgtType)));
+                try {
+                    srcType = rsMetaData.getColumnType(i);
+                    tgtType = srcType;
 
-                String srcTypeName = JDBCType.valueOf(srcType).getName();   // WARN: rsMetaData.getColumnTypeName(i) returns the vendor's name instead of JDBC name, e.g. ntext instead of longnvarchar for MSSQL
-                if (jdbcTypeMapping.containsKey(srcTypeName)) {
-                    String tgtTypeName = jdbcTypeMapping.get(srcTypeName);
-                    tgtType = JDBCType.valueOf(tgtTypeName).getVendorTypeNumber();
+                    // translate unsupported types, e.g. nvarchar to varchar, dml jdbcTypeMapping is based on JDBC types, while ddl jdbcTypeMapping is based on SQL types
+                    //            if (jdbcTypeMapping.containsKey(String.valueOf(srcType)))
+                    //                tgtType = Integer.parseInt(jdbcTypeMapping.getOrDefault(String.valueOf(srcType), String.valueOf(tgtType)));
+
+                    srcTypeName = JDBCType.valueOf(srcType).getName();   // WARN: rsMetaData.getColumnTypeName(i) returns the vendor's name instead of JDBC name, e.g. ntext instead of longnvarchar for MSSQL
+                    if (jdbcTypeMapping.containsKey(srcTypeName)) {
+                        String tgtTypeName = jdbcTypeMapping.get(srcTypeName);
+                        tgtType = JDBCType.valueOf(tgtTypeName).getVendorTypeNumber();
+                    }
+
+                    columnTypes[i - 1] = tgtType;
                 }
-
-                columnTypes[i - 1] = tgtType;
+                catch (Throwable t) {
+                    String colName = rsMetaData.getColumnName(i);
+                    log.append(String.format(" /* Error: Failed to get JDBC column type (%s) for %s.%s */\n", srcType, tableName, colName));
+                    log.append(" /* No rows copied */");
+                    return log.toString();
+                }
             }
 
-            boolean hasErrors = false;
             int row = 0;
             while (rs.next()) {
 
