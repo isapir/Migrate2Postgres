@@ -5,15 +5,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -96,6 +94,35 @@ public class PgMigrator {
         Path path = Files.write(Paths.get(filename), ddl.getBytes(StandardCharsets.UTF_8));
 
         System.out.println("Created DDL file at " + path.toAbsolutePath().toString());
+
+        String sqlCheck = "SELECT count(*) FROM information_schema.tables WHERE table_type = 'BASE TABLE'"
+                        + " AND table_schema NOT IN ('information_schema', 'pg_catalog');";
+
+        long count = -1;
+        try (Connection conn = schema.config.connect(schema.config.target)) {
+            count = Util.selectLong(sqlCheck, conn);
+        }
+        catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+        System.out.println(count);
+
+        if (count == 0) {
+
+            System.out.println("\n\nDatabase is empty. Executing DDL Script.");
+
+            StringBuilder log = new StringBuilder(1024);
+            List<String> queries = Arrays.asList(ddl);
+            Util.executeQueries(queries, log, schema.config);
+
+            System.out.println("\n\nExecuted DDL Script:");
+            System.out.println(log);
+        }
+        else {
+
+            System.out.println("\n\nDatabase is not empty. Not executing DDL Script");
+        }
     }
 
 

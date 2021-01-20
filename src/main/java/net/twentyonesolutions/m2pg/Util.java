@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -289,6 +290,15 @@ public class Util {
             log.append(getStackTraceAsString(ex));
             return false;
         }
+    }
+
+
+    public static long selectLong(String qSelect, Connection conSrc) throws SQLException {
+        Statement statSrc = conSrc.createStatement();
+        ResultSet rs;
+        rs = statSrc.executeQuery(qSelect);
+        rs.next();
+        return rs.getLong(1);
     }
 
 
