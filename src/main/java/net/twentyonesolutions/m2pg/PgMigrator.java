@@ -72,6 +72,8 @@ public class PgMigrator {
 
         Schema schema = new Schema(config);
 
+        TimeZone.setDefault(TimeZone.getTimeZone(schema.config.timezone));
+
         if (action.equals("ddl")){
 
             doDdl(schema, outputFile);

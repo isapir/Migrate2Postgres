@@ -2,8 +2,8 @@
 M2PG_CONF=MsSqlAWT2Postgres.conf
 
 M2PG_PROP=
-M2PG_PROP=%M2PG_PROP% -Dconnections.mssql.user=readonly
-M2PG_PROP=%M2PG_PROP% -Dconnections.mssql.password=secret
+M2PG_PROP=$M2PG_PROP -Dconnections.mssql.user=readonly
+M2PG_PROP=$M2PG_PROP -Dconnections.mssql.password=secret
 
 M2PG_CLASSPATH="lib/*"
 

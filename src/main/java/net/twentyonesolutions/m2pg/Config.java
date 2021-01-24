@@ -43,7 +43,7 @@ public class Config {
     Map<String, Object> schemaMapping, tableMapping, columnMapping;
     Map<String, String> columnDefaultReplace;
 
-    String name, source, target;
+    String name, source, target, timezone;
 
 
     public Config(Map<String, Object> config){
@@ -53,6 +53,7 @@ public class Config {
         this.name   = (String)this.config.getOrDefault("name", "Migrate2Postgres");
         this.source = (String)this.config.get("source");
         this.target = (String)this.config.get("target");
+        this.timezone = (String)this.config.get("timezone");
 
         Map<String, Object> mapSrc;
         mapSrc = (Map)config.getOrDefault("schema_mapping", Collections.EMPTY_MAP);
