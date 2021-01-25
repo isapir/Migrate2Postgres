@@ -37,9 +37,10 @@ public class PgMigrator {
     public final static String USAGE = "Usage: java <options> "
             + PgMigrator.class.getCanonicalName()
             + " <command> [<config-file> [<output-file>]]\n"
-            + "       where command can be:\n"
-            + "            ddl - to create the schema objects\n"
-            + "            dml - to copy the data\n";
+            + "    where command can be:\n"
+            + "        ddl - generate DDL script and execute it if the target DB is empty\n"
+            + "        dml - copy the data from the source DB to the target DB\n"
+            + "        all - run the ddl command and if executed run the dml command";
 
 
     public static void main(String[] args) throws Exception {
@@ -74,28 +75,30 @@ public class PgMigrator {
 
         TimeZone.setDefault(TimeZone.getTimeZone(schema.config.timezone));
 
-        if (action.equals("ddl")){
+        boolean cmdDdl = action.equals("all") || action.equals("ddl");
+        boolean cmdDml = action.equals("all") || action.equals("dml");
 
-            doDdl(schema, outputFile);
+        if (cmdDdl){
+            // set cmdDml to false if we're not executing the DDL because the DB is not empty
+            cmdDml = doDdl(schema, outputFile);
         }
-        else if (action.equals("dml")){
 
+        if (cmdDml){
             doDml(schema, outputFile);
         }
-        else {
+
+        if (!cmdDdl && !cmdDml) {
             System.out.println(USAGE);
             System.exit(-1);
         }
     }
 
 
-    public static void doDdl(Schema schema, String filename) throws IOException {
+    public static boolean doDdl(Schema schema, String filename) throws IOException {
 
         String ddl = schema.generateDdl();
 
         Path path = Files.write(Paths.get(filename), ddl.getBytes(StandardCharsets.UTF_8));
-
-        System.out.println("Created DDL file at " + path.toAbsolutePath().toString());
 
         String sqlCheck = "SELECT count(*) FROM information_schema.tables WHERE table_type = 'BASE TABLE'"
                         + " AND table_schema NOT IN ('information_schema', 'pg_catalog');";
@@ -108,9 +111,9 @@ public class PgMigrator {
             throwables.printStackTrace();
         }
 
-        System.out.println(count);
+        boolean executeDdl = (count == 0);
 
-        if (count == 0) {
+        if (executeDdl) {
 
             System.out.println("\n\nDatabase is empty. Executing DDL Script.");
 
@@ -123,8 +126,12 @@ public class PgMigrator {
         }
         else {
 
-            System.out.println("\n\nDatabase is not empty. Not executing DDL Script");
+            System.out.println("\n\nDatabase is not empty. Not executing DDL Script.");
         }
+
+        System.out.println("\n\nSee generated DDL file at " + path.toAbsolutePath().toString() + "\n");
+
+        return executeDdl;
     }
 
 
@@ -189,7 +196,7 @@ public class PgMigrator {
             }
         }
 
-        System.out.println("Running with " + numThreads + " threads");
+        System.out.println("Executing DML with " + numThreads + " concurrent connections");
 
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
 
@@ -251,7 +258,7 @@ public class PgMigrator {
         Util.log(path, logentry);
 
         System.out.println("\n" + logentry);
-        System.out.println("See log and recommended actions at " + path.toAbsolutePath());
+        System.out.println("See log and recommended actions at " + path.toAbsolutePath() + "\n");
     }
 
 

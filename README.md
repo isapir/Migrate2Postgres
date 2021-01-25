@@ -44,15 +44,19 @@ See the comments in the [defaults.conf](src/main/resources/templates/defaults.co
 
 Run the DDL command
 --
-This will generate a SQL script with commands for `CREATE SCHEMA`, `CREATE TABLE`, etc.
+This will generate a SQL script with commands for `CREATE SCHEMA`, `CREATE TABLE`, etc., and execute it if the target database is empty.
 
-Execute the generated DDL script
+Alternatively execute the generated DDL script
 --
-Review the script generated in the previous step and make changes if needed, then execute it in your favorite SQL client, e.g. psql, PgAdmin, or DBeaver.
+You can review the script generated in the previous step and make changes if needed, then execute it in your favorite SQL client, e.g. psql, PgAdmin, DBeaver, etc.
 
 Run the DML command
 --
 This will copy the data from the source database to your target Postgres database according to the settings in the config file.
+
+Alternatively, run the ALL command
+--
+That command will run the DDL command and if the database was empty and the DDL script is executed, run the DML command immediately afterwards.
 
 Take a vacation
 --
@@ -113,6 +117,8 @@ Values that are wrapped in `%` symbols are treated as varaibles and evaluated at
 *
 |
 +-- name                              string - name of migration project, used as prefix in logs etc.
+|
++-- timezone                          string - name of the timezone to use, default is UTC
 |
 +-- template                          string - a template to be used, e.g. "ms-sql-server"
 |
