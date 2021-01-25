@@ -26,7 +26,7 @@ import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 
 public class PgMigrator {
 
-    public final static String DISCL = getProductName() + " Copyright (C) 2018 Igal Sapir\n"
+    public final static String DISCL = getProductName() + " Copyright (C) 2021 Igal Sapir\n"
             + "This program comes with ABSOLUTELY NO WARRANTY;\n"
             + "This is free software, and you are welcome to redistribute it\n"
             + "under certain conditions;\n"
