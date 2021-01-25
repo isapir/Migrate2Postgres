@@ -69,7 +69,7 @@ public class PgMigrator {
         Config config = Config.fromFile(configFile);
 
         if (outputFile.isEmpty())
-            outputFile = config.name + "-" + action + "-" + timestamp + (action.equals("ddl") ? ".sql" : ".log");
+            outputFile = config.name + "-" + action + "-" + timestamp; // + (action.equals("ddl") ? ".sql" : ".log");
 
         Schema schema = new Schema(config);
 
@@ -80,11 +80,11 @@ public class PgMigrator {
 
         if (cmdDdl){
             // set cmdDml to false if we're not executing the DDL because the DB is not empty
-            cmdDml = doDdl(schema, outputFile);
+            cmdDml = doDdl(schema, outputFile + ".sql");
         }
 
         if (cmdDml){
-            doDml(schema, outputFile);
+            doDml(schema, outputFile + ".log");
         }
 
         if (!cmdDdl && !cmdDml) {
