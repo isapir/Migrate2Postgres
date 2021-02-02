@@ -75,12 +75,13 @@ public class PgMigrator {
 
         TimeZone.setDefault(TimeZone.getTimeZone(schema.config.timezone));
 
-        boolean cmdDdl = action.equals("all") || action.equals("ddl");
-        boolean cmdDml = action.equals("all") || action.equals("dml");
+        boolean cmdAll = action.equalsIgnoreCase("all");
+        boolean cmdDdl = cmdAll || action.equalsIgnoreCase("ddl");
+        boolean cmdDml = cmdAll || action.equalsIgnoreCase("dml");
 
         if (cmdDdl){
             // set cmdDml to false if we're not executing the DDL because the DB is not empty
-            cmdDml = doDdl(schema, outputFile + ".sql");
+            cmdDml = doDdl(schema, outputFile + ".sql") && cmdAll;
         }
 
         if (cmdDml){
