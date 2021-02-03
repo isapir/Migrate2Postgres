@@ -5,7 +5,7 @@
 
     <groupId>net.twentyonesolutions</groupId>
     <artifactId>Migrate2Postgres</artifactId>
-    <version>1.0.17</version>
+    <version>1.0.18</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -97,6 +97,7 @@
                     <archive>
                         <manifest>
                             <mainClass>net.twentyonesolutions.m2pg.PgMigrator</mainClass>
+                            <addClasspath>true</addClasspath>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
